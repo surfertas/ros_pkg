@@ -36,13 +36,12 @@ namespace husky_highlevel_controller {
          */
         void topicCB(const sensor_msgs::LaserScan& msg);
 
-        /*
-         * Publishes a visualization_msgs::Marker to define information
-         * related to the pillar.
-         * @arg: x - x coordinate.
-         * @arg: y - y coordinate.
+        /* Defines location and related specification of marker
+         * used to represent the pillar.
+         * @arg: x - x coordinate of pillar.
+         * @arg: y - y coordinate of pillar.
          */
-        void pillarMarker(int x, int y);
+        void pillarMarker(double x, double y);
 
     private:
         ros::NodeHandle nh_;

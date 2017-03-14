@@ -14,7 +14,6 @@ namespace husky_highlevel_controller {
  
         sub_ = nh_.subscribe(subscribeTopic_, Qsize_, &HuskyHighlevelController::topicCB, this);
         pub_ = nh_.advertise<geometry_msgs::Twist>("/husky_velocity_controller/cmd_vel", Qsize_);
-
         vis_pub_ = nh_.advertise<visualization_msgs::Marker>("/husky_laserscan/visualization_marker", 0);
 
         ROS_INFO("Node launched.");
@@ -65,14 +64,18 @@ namespace husky_highlevel_controller {
         pub_.publish(cmd_msg);
       
         //TODO: calculate location of pillar and pass to pillarMarker          
-        pillarMarker(vel, vel);
+        auto x_coord = min*cos(-theta);
+        auto y_coord = min*sin(-theta);
+
+        pillarMarker(x_coord, y_coord);
         ROS_INFO("Distance to Pillar: %f", min); 
     }
+    
 
-    void HuskyHighlevelController::pillarMarker(int x, int y)
+    void HuskyHighlevelController::pillarMarker(double x, double y)
     {
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "base_link";
+        marker.header.frame_id = "base_laser";
         marker.header.stamp = ros::Time();
         marker.ns = "husky_highlevel_controller";
         marker.id = 0;
@@ -88,12 +91,12 @@ namespace husky_highlevel_controller {
         marker.scale.x = 1;
         marker.scale.y = 1;
         marker.scale.z = 0.1;
-        marker.color.a = 1.0; // Don't forget to set the alpha!
+        marker.color.a = 1.0;
         marker.color.r = 0.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
-        //only if using a MESH_RESOURCE marker type:
-        marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
-        vis_pub_.publish(marker);   
+        vis_pub_.publish(marker);
     }
+
+
 } /* namespace */
