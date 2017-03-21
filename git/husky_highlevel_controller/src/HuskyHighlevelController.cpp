@@ -36,7 +36,16 @@ namespace husky_highlevel_controller {
         float d_init = 0.0;     //Initial distance to pillar.         
         auto min_idx = 0;       //Index of distance of pillar.
         auto len = msg.ranges.size();
-        
+      
+        geometry_msgs::TransformStamped transformStamped;
+        try {
+            transformStamped = tfBuffer_.lookupTransform("odom", "base_laser",
+                                                         ros::Time(0));
+        } catch (tf2::TransformException &ex) {
+            ROS_WARN("%s", ex.what());
+            ros::Duration(1.0).sleep();
+        }
+
         for (auto i = 0; i < len; i++) {
             if (min == INFINITY) 
                 min = msg.ranges[i];
@@ -57,17 +66,22 @@ namespace husky_highlevel_controller {
         auto vel = [](float x) -> float { if (x < 0.5)
                                             return 0.0;
                                           return x; } (min);
-
-      
         cmd_msg.linear.x = vel;
         cmd_msg.linear.y = vel;
         pub_.publish(cmd_msg);
       
-        //TODO: calculate location of pillar and pass to pillarMarker          
-        auto x_coord = min*cos(-theta);
-        auto y_coord = min*sin(-theta);
+        geometry_msgs::PoseStamped pose_in;
+        geometry_msgs::PoseStamped pose_out;
 
-        pillarMarker(x_coord, y_coord);
+        pose_in.pose.position.x = min*cos(-theta);
+        pose_in.pose.position.y = min*sin(-theta);
+        pose_in.header.stamp = ros::Time(0);
+        pose_in.header.frame_id = "base_laser";
+        tfBuffer_.transform(pose_in, pose_out, "odom");
+        
+        pillarMarker(pose_out.pose.position.x, 
+                     pose_out.pose.position.y);
+
         ROS_INFO("Distance to Pillar: %f", min); 
     }
     
@@ -75,7 +89,7 @@ namespace husky_highlevel_controller {
     void HuskyHighlevelController::pillarMarker(double x, double y)
     {
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "base_laser";
+        marker.header.frame_id = "odom";
         marker.header.stamp = ros::Time();
         marker.ns = "husky_highlevel_controller";
         marker.id = 0;
