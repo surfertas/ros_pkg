@@ -85,15 +85,13 @@ namespace husky_highlevel_controller {
         cmd_msg.angular.z = -theta;
 
         //Stops Husky from crashing into pillar. 
-        
-        auto vel = [](float x) -> float { if (x < 0.5)
-                                            return 0.0;
-                                          return x; } (min);
+        if (min < 0.5)
+            husky_manual_control_ = true;    
         
         //Check if there has been trigger to stop Husky.
         if (!husky_manual_control_) {
-            cmd_msg.linear.x = vel;
-            cmd_msg.linear.y = vel;
+            cmd_msg.linear.x = min;
+            cmd_msg.linear.y = min;
         } else {
             cmd_msg.linear.x = 0.0;
             cmd_msg.linear.y = 0.0;
