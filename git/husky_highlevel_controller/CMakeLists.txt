@@ -8,9 +8,11 @@ add_definitions(--std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
+  nav_msgs
   geometry_msgs
   tf2_geometry_msgs
   tf
+  std_srvs
 )
 
 ###################################
@@ -23,8 +25,10 @@ catkin_package(
   CATKIN_DEPENDS 
     roscpp
     sensor_msgs
+    nav_msgs
     geometry_msgs
     tf2_geometry_msgs
+    std_srvs
 #  DEPENDS 
 )
 
@@ -44,3 +48,13 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+
+#add_executable(ekf_localization
+#  src/ekf_localization_node.cpp
+#  src/EkfLocalization.cpp
+#)
+
+#target_link_libraries(ekf_localization
+#  ${catkin_LIBRARIES}
+#)
+

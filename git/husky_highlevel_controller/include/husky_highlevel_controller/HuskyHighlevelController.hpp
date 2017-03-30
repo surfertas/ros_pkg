@@ -7,6 +7,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <std_srvs/SetBool.h>
 #include <visualization_msgs/Marker.h>
 
 namespace husky_highlevel_controller {
@@ -19,18 +20,26 @@ namespace husky_highlevel_controller {
         /*
          *Constructor.
          */
-        HuskyHighlevelController(ros::NodeHandle& nodeHandle);
+        HuskyHighlevelController(ros::NodeHandle&, bool manual_control);
 
         /*
          * Destructor.
          */
         virtual ~HuskyHighlevelController();
     
+    private:
+        void registerService();
+        void registerSubscriber();
+        void registerPublisher();
+
         /*
-         * Checks if specified parameters are available.
-         * @rets: returns 1 if all parameters found, else 0        
+         * Service that sets husky_manual_control, which allows
+         * user to stop/start husky from command line using rosservice 
+         * call.
+         * @rets: returns true on success.        
          */
-        int readParameters();
+        bool controlCB(std_srvs::SetBool::Request &req,
+                       std_srvs::SetBool::Response &resp);
 
         /*
          * Subscriber callback to calculate the distance to pillar,
@@ -49,13 +58,16 @@ namespace husky_highlevel_controller {
 
     private:
         ros::NodeHandle nh_;
-        ros::Subscriber sub_;
-        ros::Publisher pub_;
-        ros::Publisher vis_pub_;
+        ros::Subscriber sub_laser_scan_;
+        ros::Publisher pub_husky_twist_;
+        ros::Publisher pub_visualization_marker_;
+        
+        ros::ServiceServer service_manual_control_;
+        bool husky_manual_control_;
+    
         tf2_ros::Buffer tfBuffer_;
         tf2_ros::TransformListener listener_ {tfBuffer_}; 
-        std::string subscribeTopic_;
-        int Qsize_;
+        ros::ServiceClient client_;
     };
 
 } /* namespace */
