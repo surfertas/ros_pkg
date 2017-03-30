@@ -1,3 +1,10 @@
+// This file is the header to HuskyHighlevelController.cpp.
+//
+// Work based off the open source course, Programming for Robotics - ROS
+// by ETZH (http://www.rsl.ethz.ch/education-students/lectures/ros.html)
+// Date:    3/29/2017
+// Author:  Tasuku Miura
+
 #pragma once
 
 #include <ros/ros.h>
@@ -36,6 +43,8 @@ namespace husky_highlevel_controller {
          * Service that sets husky_manual_control, which allows
          * user to stop/start husky from command line using rosservice 
          * call.
+         * @args: req - request defined in std_srvs::SetBool.
+         * @args: resp - response as defined in std_srvs::SetBool.
          * @rets: returns true on success.        
          */
         bool controlCB(std_srvs::SetBool::Request &req,
@@ -45,14 +54,14 @@ namespace husky_highlevel_controller {
          * Subscriber callback to calculate the distance to pillar,
          * and publishes geometry_msg::Twist to implement a 
          * proportional controller.
-         * @arg: msg - contains info related to LaserScan.msg.
+         * @args: msg - contains info related to LaserScan.msg.
          */
         void topicCB(const sensor_msgs::LaserScan& msg);
 
         /* Defines location and related specification of marker
          * used to represent the pillar.
-         * @arg: x - x coordinate of pillar.
-         * @arg: y - y coordinate of pillar.
+         * @args: x - x coordinate of pillar.
+         * @args: y - y coordinate of pillar.
          */
         void pillarMarker(double x, double y);
 

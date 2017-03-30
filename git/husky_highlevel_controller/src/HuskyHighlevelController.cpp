@@ -1,3 +1,8 @@
+// Work based off the open source course, Programming for Robotics - ROS
+// by ETZH (http://www.rsl.ethz.ch/education-students/lectures/ros.html)
+// Date:    3/29/2017
+// Author:  Tasuku Miura
+
 #include "husky_highlevel_controller/HuskyHighlevelController.hpp"
 #include <cmath>
 
@@ -23,7 +28,6 @@ namespace husky_highlevel_controller {
         service_manual_control_ =
             nh_.advertiseService("manual_control_override", &HuskyHighlevelController::controlCB, this);
     }
-        
 
     void HuskyHighlevelController::registerSubscriber()
     {
@@ -111,7 +115,6 @@ namespace husky_highlevel_controller {
         ROS_INFO("Distance to Pillar: %f", min); 
     }
     
-
     void HuskyHighlevelController::pillarMarker(double x, double y)
     {
         visualization_msgs::Marker marker;
@@ -137,6 +140,5 @@ namespace husky_highlevel_controller {
         marker.color.b = 0.0;
         pub_visualization_marker_.publish(marker);
     }
-
 
 } /* namespace */
