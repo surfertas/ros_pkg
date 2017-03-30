@@ -3,19 +3,14 @@
 
 namespace husky_highlevel_controller {
 
-    HuskyHighlevelController::HuskyHighlevelController(ros::NodeHandle& nodeHandle) :
-      nh_(nodeHandle)
+    HuskyHighlevelController::HuskyHighlevelController(ros::NodeHandle& nodeHandle,
+                                                       bool manual_control) :
+        nh_(nodeHandle),
+        husky_manual_control_(manual_control)
     {
-        
-        if (!readParameters()) {
-            ROS_ERROR("Could not read parameter.");
-            ros::requestShutdown();
-        }
- 
-        sub_ = nh_.subscribe(subscribeTopic_, Qsize_, &HuskyHighlevelController::topicCB, this);
-        pub_ = nh_.advertise<geometry_msgs::Twist>("/husky_velocity_controller/cmd_vel", Qsize_);
-        vis_pub_ = nh_.advertise<visualization_msgs::Marker>("/husky_laserscan/visualization_marker", 0);
-
+        registerSubscriber();
+        registerService();
+        registerPublisher(); 
         ROS_INFO("Node launched.");
     }
 
@@ -23,10 +18,33 @@ namespace husky_highlevel_controller {
     {
     }
     
-    int HuskyHighlevelController::readParameters()
+    void HuskyHighlevelController::registerService()
     {
-        return (nh_.getParam("topic_name", subscribeTopic_)
-                && nh_.getParam("queue_size", Qsize_));
+        service_manual_control_ =
+            nh_.advertiseService("manual_control_override", &HuskyHighlevelController::controlCB, this);
+    }
+        
+
+    void HuskyHighlevelController::registerSubscriber()
+    {
+        sub_laser_scan_ = 
+            nh_.subscribe("/scan", 10, &HuskyHighlevelController::topicCB, this);
+    }
+
+    void HuskyHighlevelController::registerPublisher()
+    {
+        pub_husky_twist_ =
+            nh_.advertise<geometry_msgs::Twist>("/husky_velocity_controller/cmd_vel", 10);
+        pub_visualization_marker_ = 
+            nh_.advertise<visualization_msgs::Marker>("/husky_laserscan/visualization_marker", 0);
+    }
+
+    bool HuskyHighlevelController::controlCB(std_srvs::SetBool::Request &req,
+                                             std_srvs::SetBool::Response &resp)
+    {
+        husky_manual_control_ = req.data;
+        resp.success = true;
+        return resp.success;
     }
 
     void HuskyHighlevelController::topicCB(const sensor_msgs::LaserScan& msg)
@@ -63,12 +81,20 @@ namespace husky_highlevel_controller {
         cmd_msg.angular.z = -theta;
 
         //Stops Husky from crashing into pillar. 
+        
         auto vel = [](float x) -> float { if (x < 0.5)
                                             return 0.0;
                                           return x; } (min);
-        cmd_msg.linear.x = vel;
-        cmd_msg.linear.y = vel;
-        pub_.publish(cmd_msg);
+        
+        //Check if there has been trigger to stop Husky.
+        if (!husky_manual_control_) {
+            cmd_msg.linear.x = vel;
+            cmd_msg.linear.y = vel;
+        } else {
+            cmd_msg.linear.x = 0.0;
+            cmd_msg.linear.y = 0.0;
+        }
+        pub_husky_twist_.publish(cmd_msg);
       
         geometry_msgs::PoseStamped pose_in;
         geometry_msgs::PoseStamped pose_out;
@@ -109,7 +135,7 @@ namespace husky_highlevel_controller {
         marker.color.r = 0.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
-        vis_pub_.publish(marker);
+        pub_visualization_marker_.publish(marker);
     }
 
 
